@@ -1,0 +1,5 @@
+GET http://0.0.0.0:8010/users.getOwnedChats
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.фыв.HNzDFG5TxWKJdAGvcb7wLhSQm3nH6jzB43zUzxsKaiU
+
+###
