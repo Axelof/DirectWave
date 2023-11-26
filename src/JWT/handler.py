@@ -7,9 +7,9 @@ from jwt.exceptions import DecodeError
 from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from src.JWT.models import TokenPayload, AccessTokenPayload, RefreshTokenPayload
-from src.enums.jwt import TokenType, Scopes
-from src.utils.encoders import CustomJsonEncoder
+from JWT.models import TokenPayload, AccessTokenPayload, RefreshTokenPayload
+from enums.jwt import TokenType, Scopes
+from utils.encoders import CustomJsonEncoder
 
 
 class JWTBearer(HTTPBearer):
@@ -65,7 +65,6 @@ class JWTBearer(HTTPBearer):
             payload = TokenPayload(**raw_payload)
 
             if payload.type == TokenType.ACCESS:
-                print(AccessTokenPayload(**raw_payload))
                 return AccessTokenPayload(**raw_payload)
             return RefreshTokenPayload(**raw_payload)
 

@@ -1,6 +1,6 @@
 from enum import auto
 
-from src.enums import NameEnum
+from enums import NameEnum
 
 
 class TokenType(NameEnum):

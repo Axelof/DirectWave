@@ -1,3 +1,5 @@
-from . import (
-    users
+from routes import ping
+
+routers = (
+    ping,
 )

@@ -1,5 +1,9 @@
-GET http://0.0.0.0:8010/users.getOwnedChats
+GET https://127.0.0.1/utils.ping
 Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.фыв.HNzDFG5TxWKJdAGvcb7wLhSQm3nH6jzB43zUzxsKaiU
+
+###
+GET https://127.0.0.1/utils.checkAuth
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZXMiOlsiUFJPRklMRSJdLCJ0eXBlIjoiQUNDRVNTIiwic3ViIjoiRFcgKEFQSSkiLCJpc3MiOiJEaXJlY3RXYXZlIChEVykiLCJpZCI6MTAwLCJpYXQiOjE3MDEwMjgyMTguNzMzODA3LCJleHAiOjE3MDEwMzE4MTguNzMzODA3fQ.2XV7QAKjcpw8t0aFodkOYxMtpCZyLmkbyAE5PfStpK0
 
 ###

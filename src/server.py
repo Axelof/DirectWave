@@ -1,8 +1,18 @@
-import uvicorn
+import gettext
+import logging
+
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
+from definitions import LOCALES_DOMAIN, LOCALES_DIR
 from scheduler import scheduler
+from settings import settings
+
+from routes import routers
+import middlewares  # noqa
+
+
+gettext.install(LOCALES_DOMAIN, LOCALES_DIR)
 
 
 def custom_generate_unique_id(route: APIRoute):
@@ -20,10 +30,9 @@ app = FastAPI(
 )
 
 
-from src.routes import users
+for router in routers:
+    app.include_router(router.router)
 
-app.include_router(router=users.router)
 
-
-if __name__ == "__main__":
-    uvicorn.run(app, port=8010, host="0.0.0.0")
+if settings.DOMAIN:
+    logging.info(f'https://{settings.DOMAIN}')

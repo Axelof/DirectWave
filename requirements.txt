@@ -1,0 +1,8 @@
+Babel
+ruff==0.0.287
+fastapi~=0.101.0
+uvicorn==0.23.2
+loguru
+APScheduler~=3.10.1
+pydantic~=1.10.12
+PyJWT~=2.8.0

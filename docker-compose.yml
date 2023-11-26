@@ -1,0 +1,31 @@
+version: "1.1"
+
+services:
+  backend:
+    env_file: .env
+    build: .
+    tty: true
+    command:
+      - --host=0.0.0.0
+      - --port=80
+      - --reload
+      - --reload-dir=/DirectWave/src
+      - --log-level=warning
+    ports:
+      - "80:80"
+    volumes:
+      - ./src:/DirectWave/src
+      - ./resources:/DirectWave/resources
+#      - ./files:/DirectWave/files
+#      - /media:/DirectWave/media
+
+  database:
+    env_file: .env
+    image: mongo:7.0.1-rc0-jammy
+    expose:
+      - 27017
+    volumes:
+      - database_data:/data/db
+
+volumes:
+  database_data:

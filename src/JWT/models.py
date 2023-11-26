@@ -1,9 +1,8 @@
-import secrets
 import time
 
 from pydantic import BaseModel, Field
 
-from src.enums.jwt import TokenType, Scopes
+from enums.jwt import TokenType, Scopes
 
 
 class TokenPayload(BaseModel):
