@@ -1,3 +1,4 @@
 from JWT.handler import JWTBearer
+from settings import settings
 
-JWT = JWTBearer("its_really_secret_token")  # TODO: replace to .env secret
+JWT = JWTBearer(secret=settings.SECRET)

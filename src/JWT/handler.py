@@ -2,7 +2,7 @@ import contextlib
 import secrets
 
 import jwt
-from jwt.exceptions import DecodeError
+from jwt.exceptions import DecodeError, ExpiredSignatureError
 
 from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -60,7 +60,7 @@ class JWTBearer(HTTPBearer):
         }
 
     async def decrypt(self, token: str) -> AccessTokenPayload | RefreshTokenPayload | None:
-        with contextlib.suppress(DecodeError):
+        with contextlib.suppress(DecodeError, ExpiredSignatureError):
             raw_payload = jwt.decode(token, self.secret, algorithms=[self.algorithm])
             payload = TokenPayload(**raw_payload)
 

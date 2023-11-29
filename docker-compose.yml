@@ -16,16 +16,17 @@ services:
     volumes:
       - ./src:/DirectWave/src
       - ./resources:/DirectWave/resources
-#      - ./files:/DirectWave/files
+      - ./files:/DirectWave/files
 #      - /media:/DirectWave/media
 
   database:
     env_file: .env
-    image: mongo:7.0.1-rc0-jammy
+    image: postgres:15.1-alpine
     expose:
-      - 27017
+      - 5432
     volumes:
-      - database_data:/data/db
+      - database_data:/var/lib/postgresql/data
 
 volumes:
   database_data:
+  files:

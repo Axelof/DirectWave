@@ -6,6 +6,7 @@ from enums import NameEnum
 class TokenType(NameEnum):
     ACCESS = auto()
     REFRESH = auto()
+    VERIFY = auto()
 
 
 class Scopes(NameEnum):
