@@ -1,5 +1,5 @@
 import contextlib
-import secrets
+from functools import partial
 
 import jwt
 from jwt.exceptions import DecodeError, ExpiredSignatureError
@@ -7,20 +7,44 @@ from jwt.exceptions import DecodeError, ExpiredSignatureError
 from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from JWT.models import TokenPayload, AccessTokenPayload, RefreshTokenPayload
+from JWT.models import (
+    TokenPayload,
+    AccessTokenPayload,
+    RefreshTokenPayload,
+    VerifyTokenPayload,
+)
+
 from enums.jwt import TokenType, Scopes
 from utils.encoders import CustomJsonEncoder
 
 
 class JWTBearer(HTTPBearer):
+    ISSUER = "DirectWave"
+    SUBJECT = "DW (API)"
+
     def __init__(
             self,
+            _type: TokenType,
             secret: str,
             auto_error: bool = True,
-            algorithm: str = "HS256"
+            algorithm: str = "HS256",
     ):
-        self.secret = secret
-        self.algorithm = algorithm
+        self.type = _type
+
+        self.encode = partial(
+            jwt.encode,
+            key=secret,
+            algorithm=algorithm,
+            json_encoder=CustomJsonEncoder,
+        )
+
+        self.decode = partial(
+            jwt.decode,
+            key=secret,
+            algorithms=[algorithm]
+        )
+
+        self.sign = self._Sign(self)
 
         super().__init__(auto_error=auto_error)
 
@@ -30,45 +54,53 @@ class JWTBearer(HTTPBearer):
         if not await self.verify(credentials):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="403 Forbidden. Access denied."
+                detail="403 Forbidden. Access denied"
             )
 
         return credentials.credentials
 
-    def sign(self, _id: int, scopes: Scopes | list[Scopes]):
-        payload = {
-            "scopes": scopes if type(scopes) == list else [scopes],
-            "jti": secrets.token_hex(16),
-            "iss": "DirectWave (DW)",
-            "sub": "DW (API)",
-            "id": _id
-        }
+    class _Sign:
+        # Follow the RFC: https://datatracker.ietf.org/doc/html/rfc7519
+        def __init__(self, parent):
+            self._parent = parent
 
-        access_token = AccessTokenPayload(**payload)
-        refresh_token = RefreshTokenPayload(**payload)
+        def verify(self, jti: str):
+            return self._parent.encode(VerifyTokenPayload(
+                jti=jti, iss=JWTBearer.ISSUER, sub=JWTBearer.SUBJECT
+            ).dict())
 
-        return {
-            "access_token": jwt.encode(
-                access_token.dict(), json_encoder=CustomJsonEncoder,
-                algorithm=self.algorithm, key=self.secret
-            ),
+        def access(self, jti: str, _id: str, scopes: list[Scopes]):
+            return self._parent.encode(AccessTokenPayload(
+                jti=jti, id=_id, scopes=scopes, iss=JWTBearer.ISSUER, sub=JWTBearer.SUBJECT
+            ).dict())
 
-            "refresh_token": jwt.encode(
-                refresh_token.dict(), json_encoder=CustomJsonEncoder,
-                algorithm=self.algorithm, key=self.secret
-            )
-        }
-
-    async def decrypt(self, token: str) -> AccessTokenPayload | RefreshTokenPayload | None:
-        with contextlib.suppress(DecodeError, ExpiredSignatureError):
-            raw_payload = jwt.decode(token, self.secret, algorithms=[self.algorithm])
-            payload = TokenPayload(**raw_payload)
-
-            if payload.type == TokenType.ACCESS:
-                return AccessTokenPayload(**raw_payload)
-            return RefreshTokenPayload(**raw_payload)
-
-        return None  # TODO: реализовать запись ошибки в лог-файлы.
+        def refresh(self, jti: str,  _id: str, scopes: list[Scopes]):
+            return self._parent.encode(RefreshTokenPayload(
+                jti=jti, id=_id, scopes=scopes, iss=JWTBearer.ISSUER, sub=JWTBearer.SUBJECT
+            ).dict())
 
     async def verify(self, credentials: HTTPAuthorizationCredentials):
-        return True if await self.decrypt(credentials.credentials) else False
+        decrypted_payload = await self.decrypt(credentials.credentials)
+
+        with contextlib.suppress(AttributeError):
+            return decrypted_payload.type == self.type
+        return False
+
+    async def decrypt(self, token: str) -> AccessTokenPayload | RefreshTokenPayload | VerifyTokenPayload | None:
+        with contextlib.suppress(DecodeError, ExpiredSignatureError):
+            unprocessed_payload = self.decode(jwt=token)
+            payload = TokenPayload(**unprocessed_payload)
+
+            match payload.type:
+                case TokenType.ACCESS:
+                    payload = AccessTokenPayload(**unprocessed_payload)
+                case TokenType.REFRESH:
+                    payload = RefreshTokenPayload(**unprocessed_payload)
+                case TokenType.VERIFY:
+                    payload = VerifyTokenPayload(**unprocessed_payload)
+                case _:
+                    payload = None
+
+            return payload
+
+        return None  # TODO: реализовать запись ошибки в лог-файлы

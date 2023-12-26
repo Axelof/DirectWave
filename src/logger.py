@@ -17,9 +17,17 @@ _logger_format = (
 _loggers_whitelist = [
     r'tortoise',
     r'fastapi',
-    r'apscheduler',
+    # r'apscheduler',
 ]
 
+
+_logger_blacklist = [
+    r"apscheduler"
+]
+
+
+_logs_regex_blacklist = [
+]
 
 _logger = logger
 
@@ -27,6 +35,12 @@ _logger = logger
 def hide_secrets(record: dict):
     record['message'] = record['message'].replace(settings.SECRET, '[SECRET]')
     record['message'] = record['message'].replace(settings.EMAIL_PASSWORD, '[PASSWORD]')
+
+
+def filter_logs(record: dict):
+    return not any(
+        re.match(regex, record['message']) for regex in _logs_regex_blacklist
+    )
 
 
 class InterceptHandler(logging.Handler):
@@ -63,6 +77,11 @@ def whitelist_logging():
     )
 
 
+def blacklist_logging():
+    for logger_name in _logger_blacklist:
+        logging.getLogger(logger_name).setLevel(logging.FATAL)
+
+
 def configure_logging():
     global _logger
     _logger.remove(0)
@@ -71,10 +90,13 @@ def configure_logging():
         level=logging.DEBUG if settings.DEBUG else logging.INFO,
         format=_logger_format,
         backtrace=False,
+        filter=filter_logs
     )
     _logger = _logger.patch(hide_secrets)
 
     whitelist_logging()
+    blacklist_logging()
+
     logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO, force=True)
 
     # configure default logging

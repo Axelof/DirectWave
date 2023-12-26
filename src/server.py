@@ -11,7 +11,7 @@ from settings import settings
 from routes import routers
 import middlewares  # noqa
 from logger import configure_logging
-from mail import signals as signals
+import mail.signals
 
 
 gettext.install(LOCALES_DOMAIN, LOCALES_DIR)
@@ -26,11 +26,11 @@ app = FastAPI(
     generate_unique_id_function=custom_generate_unique_id,
     on_startup=[
         scheduler.start,
-        signals.on_startup
+        mail.signals.on_startup
     ],
     on_shutdown=[
         scheduler.shutdown,
-        signals.on_shutdown
+        mail.signals.on_shutdown
     ]
 )
 

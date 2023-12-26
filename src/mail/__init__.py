@@ -20,7 +20,7 @@ class SMTPModule:
         self._jinja = Environment(loader=FileSystemLoader(FILES_DIR))
         self._server = SMTP(hostname=self.host, port=self.port, use_tls=True)
 
-        self.template = self._jinja.get_template("template.html")
+        self.template = self._jinja.get_template('mail/template.html')
 
     async def start(self):
         await self._server.connect()
@@ -34,16 +34,16 @@ class SMTPModule:
     async def verify(self, receiver: str):
         message = MIMEMultipart('alternative')
 
-        message['Subject'] = f'{settings.PROJECT_NAME} Verify'
+        message['Subject'] = f'DirectWave Verify'
         message['From'] = self.user
         message['To'] = receiver
 
         message.attach(
             MIMEText(
                 self.template.render(
-                    date=datetime.now().strftime("%d.%m.%Y (%H:%M)"),
-                    verify_endpoint="https://google.com/",  # TODO: replace
-                    incorrect_endpoint="https://google.com/"  # TODO: replace
+                    date=datetime.now().strftime('%d.%m.%Y (%H:%M)'),
+                    verify_endpoint='https://google.com/',  # TODO: replace
+                    incorrect_endpoint='https://google.com/'  # TODO: replace
                 ), 'html'
             )
         )

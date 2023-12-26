@@ -4,6 +4,6 @@ from JWT import JWT
 
 router = APIRouter(
     prefix="/users",
-    tags=["utils"],
+    tags=["users"],
 )
 
