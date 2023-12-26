@@ -7,6 +7,8 @@ from jwt.exceptions import DecodeError, ExpiredSignatureError
 from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+from enums.jwt import TokenType, Scopes
+from utils.encoders import CustomJsonEncoder
 from JWT.models import (
     TokenPayload,
     AccessTokenPayload,
@@ -14,20 +16,17 @@ from JWT.models import (
     VerifyTokenPayload,
 )
 
-from enums.jwt import TokenType, Scopes
-from utils.encoders import CustomJsonEncoder
-
 
 class JWTBearer(HTTPBearer):
     ISSUER = "DirectWave"
     SUBJECT = "DW (API)"
 
     def __init__(
-            self,
-            _type: TokenType,
-            secret: str,
-            auto_error: bool = True,
-            algorithm: str = "HS256",
+        self,
+        _type: TokenType,
+        secret: str,
+        auto_error: bool = True,
+        algorithm: str = "HS256",
     ):
         self.type = _type
 
@@ -38,11 +37,7 @@ class JWTBearer(HTTPBearer):
             json_encoder=CustomJsonEncoder,
         )
 
-        self.decode = partial(
-            jwt.decode,
-            key=secret,
-            algorithms=[algorithm]
-        )
+        self.decode = partial(jwt.decode, key=secret, algorithms=[algorithm])
 
         self.sign = self._Sign(self)
 
@@ -54,7 +49,7 @@ class JWTBearer(HTTPBearer):
         if not await self.verify(credentials):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="403 Forbidden. Access denied"
+                detail="403 Forbidden. Access denied",
             )
 
         return credentials.credentials
@@ -65,19 +60,33 @@ class JWTBearer(HTTPBearer):
             self._parent = parent
 
         def verify(self, jti: str):
-            return self._parent.encode(VerifyTokenPayload(
-                jti=jti, iss=JWTBearer.ISSUER, sub=JWTBearer.SUBJECT
-            ).dict())
+            return self._parent.encode(
+                VerifyTokenPayload(
+                    jti=jti, iss=JWTBearer.ISSUER, sub=JWTBearer.SUBJECT
+                ).dict()
+            )
 
         def access(self, jti: str, _id: str, scopes: list[Scopes]):
-            return self._parent.encode(AccessTokenPayload(
-                jti=jti, id=_id, scopes=scopes, iss=JWTBearer.ISSUER, sub=JWTBearer.SUBJECT
-            ).dict())
+            return self._parent.encode(
+                AccessTokenPayload(
+                    jti=jti,
+                    id=_id,
+                    scopes=scopes,
+                    iss=JWTBearer.ISSUER,
+                    sub=JWTBearer.SUBJECT,
+                ).dict()
+            )
 
-        def refresh(self, jti: str,  _id: str, scopes: list[Scopes]):
-            return self._parent.encode(RefreshTokenPayload(
-                jti=jti, id=_id, scopes=scopes, iss=JWTBearer.ISSUER, sub=JWTBearer.SUBJECT
-            ).dict())
+        def refresh(self, jti: str, _id: str, scopes: list[Scopes]):
+            return self._parent.encode(
+                RefreshTokenPayload(
+                    jti=jti,
+                    id=_id,
+                    scopes=scopes,
+                    iss=JWTBearer.ISSUER,
+                    sub=JWTBearer.SUBJECT,
+                ).dict()
+            )
 
     async def verify(self, credentials: HTTPAuthorizationCredentials):
         decrypted_payload = await self.decrypt(credentials.credentials)
@@ -86,7 +95,9 @@ class JWTBearer(HTTPBearer):
             return decrypted_payload.type == self.type
         return False
 
-    async def decrypt(self, token: str) -> AccessTokenPayload | RefreshTokenPayload | VerifyTokenPayload | None:
+    async def decrypt(
+        self, token: str
+    ) -> AccessTokenPayload | RefreshTokenPayload | VerifyTokenPayload | None:
         with contextlib.suppress(DecodeError, ExpiredSignatureError):
             unprocessed_payload = self.decode(jwt=token)
             payload = TokenPayload(**unprocessed_payload)

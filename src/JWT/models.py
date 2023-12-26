@@ -42,6 +42,3 @@ class RefreshTokenPayload(TokenPayload, UserPayload):
     exp: float = Field(default_factory=lambda: time.time() + 86400)
     nbf: float = Field(default_factory=lambda: time.time() + 3600)
     type: TokenType = Field(default=TokenType.REFRESH)
-
-
-

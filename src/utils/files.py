@@ -11,7 +11,7 @@ class File:
         self.path = path
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(\"{self.path}\")"
+        return f'{self.__class__.__name__}("{self.path}")'
 
     def read(self) -> Any:
         with open(self.path, mode="r", encoding="UTF-8") as file:

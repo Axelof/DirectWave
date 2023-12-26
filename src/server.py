@@ -19,19 +19,15 @@ configure_logging()
 
 
 def custom_generate_unique_id(route: APIRoute):
-    return f"{route.tags[0]}-{route.name}" if len(route.tags) else f"unmarked-{route.name}"
+    return (
+        f"{route.tags[0]}-{route.name}" if len(route.tags) else f"unmarked-{route.name}"
+    )
 
 
 app = FastAPI(
     generate_unique_id_function=custom_generate_unique_id,
-    on_startup=[
-        scheduler.start,
-        mail.signals.on_startup
-    ],
-    on_shutdown=[
-        scheduler.shutdown,
-        mail.signals.on_shutdown
-    ]
+    on_startup=[scheduler.start, mail.signals.on_startup],
+    on_shutdown=[scheduler.shutdown, mail.signals.on_shutdown],
 )
 
 
@@ -40,4 +36,4 @@ for router in routers:
 
 
 if settings.DOMAIN:
-    logger.info(f'https://{settings.DOMAIN}')
+    logger.info(f"https://{settings.DOMAIN}")

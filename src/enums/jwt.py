@@ -16,5 +16,3 @@ class Scopes(NameEnum):
     STATUS = auto()
     EMAIL = auto()
     WALL = auto()
-
-
