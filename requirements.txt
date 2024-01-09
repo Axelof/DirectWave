@@ -1,4 +1,5 @@
 Babel
+tortoise-orm[asyncpg]==0.19.*
 ruff==0.0.287
 fastapi~=0.101.0
 uvicorn==0.23.2

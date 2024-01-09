@@ -1,4 +1,4 @@
-import time
+from datetime import datetime, timedelta
 
 from pydantic import BaseModel, Field
 
@@ -11,16 +11,14 @@ class TokenPayload(BaseModel):
     sub: str = Field(...)
     iss: str = Field(...)
     jti: str = Field(...)
-    exp: float
+    exp: datetime
 
-    iat: float = Field(default_factory=lambda: time.time())
+    iat: datetime = Field(default_factory=lambda: datetime.timestamp(datetime.now()))
 
     @property
     def is_blacklisted(self):
-        return NotImplemented
-        # TODO: Pseudo-code
-        # from JWT.utils import blacklist
-        # return blacklist.in(self.jti)
+        from JWT.utils import blacklist
+        return blacklist.is_blacklisted(self.jti)
 
 
 class UserPayload(BaseModel):
@@ -29,16 +27,16 @@ class UserPayload(BaseModel):
 
 
 class VerifyTokenPayload(TokenPayload):
-    exp: float = Field(default_factory=lambda: time.time() + 604800)
+    exp: datetime = Field(default_factory=lambda: datetime.now() + timedelta(seconds=604800))
     type: TokenType = Field(default=TokenType.VERIFY)
 
 
 class AccessTokenPayload(TokenPayload, UserPayload):
-    exp: float = Field(default_factory=lambda: time.time() + 3600)
+    exp: datetime = Field(default_factory=lambda: datetime.now() + timedelta(seconds=3600))
     type: TokenType = Field(default=TokenType.ACCESS)
 
 
 class RefreshTokenPayload(TokenPayload, UserPayload):
-    exp: float = Field(default_factory=lambda: time.time() + 86400)
-    nbf: float = Field(default_factory=lambda: time.time() + 3600)
+    exp: datetime = Field(default_factory=lambda: datetime.now() + timedelta(seconds=86400))
+    nbf: datetime = Field(default_factory=lambda: datetime.now() + timedelta(seconds=3600))
     type: TokenType = Field(default=TokenType.REFRESH)

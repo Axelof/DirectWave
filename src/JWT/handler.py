@@ -9,6 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from enums.jwt import TokenType, Scopes
 from utils.encoders import CustomJsonEncoder
+from JWT.utils import blacklist
 from JWT.models import (
     TokenPayload,
     AccessTokenPayload,
@@ -46,7 +47,7 @@ class JWTBearer(HTTPBearer):
     async def __call__(self, _: Request):
         credentials: HTTPAuthorizationCredentials = await super().__call__(_)
 
-        if not await self.verify(credentials):
+        if not self.verify(credentials):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="403 Forbidden. Access denied",
@@ -88,14 +89,17 @@ class JWTBearer(HTTPBearer):
                 ).dict()
             )
 
-    async def verify(self, credentials: HTTPAuthorizationCredentials):
-        decrypted_payload = await self.decrypt(credentials.credentials)
+    def renew(self, token: RefreshTokenPayload):
+        return NotImplemented
+
+    def verify(self, credentials: HTTPAuthorizationCredentials):
+        decrypted_payload = self.decrypt(credentials.credentials)
 
         with contextlib.suppress(AttributeError):
             return decrypted_payload.type == self.type
         return False
 
-    async def decrypt(
+    def decrypt(
         self, token: str
     ) -> AccessTokenPayload | RefreshTokenPayload | VerifyTokenPayload | None:
         with contextlib.suppress(DecodeError, ExpiredSignatureError):
@@ -109,8 +113,6 @@ class JWTBearer(HTTPBearer):
                     payload = RefreshTokenPayload(**unprocessed_payload)
                 case TokenType.VERIFY:
                     payload = VerifyTokenPayload(**unprocessed_payload)
-                case _:
-                    payload = None
 
             return payload
 

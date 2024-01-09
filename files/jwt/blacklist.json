@@ -1,2 +1,10 @@
-[
-]
+{"data":
+  [
+    {
+      "type": "VERIFY",
+      "jti": "222",
+      "exp": 1704759821,
+      "description": "mew"
+    }
+  ]
+}
