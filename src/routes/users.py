@@ -1,6 +1,5 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from JWT import JWT
 
 router = APIRouter(
     prefix="/users",

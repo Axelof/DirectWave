@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: end-of-file-fixer
+        stages: [ commit ]
+
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: ruff format --no-cache
+        language: system
+        types: [ python ]
+        minimum_pre_commit_version: "2.9.2"
+
+      - id: isort
+        name: isort
+        entry: isort .
+        language: system
+        types: [ python ]
+        minimum_pre_commit_version: "2.9.2"
+
+      - id: ruff check
+        name: ruff check
+        entry: ruff check
+        language: system
+        types: [ python ]
+        stages: [ push ]

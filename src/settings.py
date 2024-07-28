@@ -52,4 +52,5 @@ class Settings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     mail: MailSettings = MailSettings()
 
+
 settings = Settings()

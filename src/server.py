@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.routing import APIRoute
 from loguru import logger
 
 from scheduler import scheduler
@@ -10,7 +9,6 @@ import middlewares  # noqa
 from signals import WatchSignals
 from utils.logger import configure_logging
 from utils.i18n import configure_gettext
-import mail.signals
 
 
 configure_gettext()

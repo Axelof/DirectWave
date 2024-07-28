@@ -40,9 +40,13 @@ class WatchSignals:
             for attributes in dir(module):
                 if callable(function := getattr(module, attributes)):
                     if function.__name__.startswith("sp_"):
-                        self.functions_on_startup.append((module.__name__, function.__name__[3:], function))
+                        self.functions_on_startup.append(
+                            (module.__name__, function.__name__[3:], function)
+                        )
                     if function.__name__.startswith("sn_"):
-                        self.functions_on_shutdown.append((module.__name__, function.__name__[3:], function))
+                        self.functions_on_shutdown.append(
+                            (module.__name__, function.__name__[3:], function)
+                        )
 
     @staticmethod
     async def execute(function: Function):
@@ -64,10 +68,19 @@ class WatchSignals:
     async def on_startup(self):
         for module_name, function_name, function in self.functions_on_startup:
             result = await self.execute(function)
-            self.log(FunctionLogType.STARTUP, m_name=module_name, f_name=function_name, r=result)
+            self.log(
+                FunctionLogType.STARTUP,
+                m_name=module_name,
+                f_name=function_name,
+                r=result,
+            )
 
     async def on_shutdown(self):
         for module_name, function_name, function in self.functions_on_shutdown:
             result = await self.execute(function)
-            self.log(FunctionLogType.SHUTDOWN, m_name=module_name, f_name=function_name, r=result)
-
+            self.log(
+                FunctionLogType.SHUTDOWN,
+                m_name=module_name,
+                f_name=function_name,
+                r=result,
+            )
