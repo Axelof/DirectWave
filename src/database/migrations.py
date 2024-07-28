@@ -15,10 +15,9 @@ async def run_migration():
     await command.init()
     with contextlib.suppress(FileExistsError):
         await command.init_db(safe=True)
-    # noinspection PyBroadException
     try:
         await command.migrate()
-        await command.upgrade()  # noqa
+        await command.upgrade(run_in_transaction=True)
         logger.info("Database successfully upgraded")
-    except BaseException:
-        logger.error("Database failed to upgrade")
+    except BaseException as e:
+        logger.error(f"Database failed to upgrade: {e}")

@@ -17,7 +17,15 @@ services:
       - ./src:/DirectWave/src
       - ./resources:/DirectWave/resources
       - ./files:/DirectWave/files
-#      - /media:/DirectWave/media
+
+  redis:
+    image: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
 
   database:
     env_file: .env
@@ -29,4 +37,5 @@ services:
 
 volumes:
   database_data:
+  redis_data:
   files:

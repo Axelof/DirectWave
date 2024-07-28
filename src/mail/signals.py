@@ -1,9 +1,13 @@
 from mail import mail
 
 
-async def on_startup():
-    await mail.start()
+async def sp_():
+    smtp = await mail.start()
+
+    return f"SMTP connected ({smtp.host}:{smtp.port} - {smtp.username})"
 
 
-async def on_shutdown():
+async def sn_():
     await mail.shutdown()
+
+    return "SMTP connection closed"

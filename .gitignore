@@ -1,0 +1,7 @@
+.idea
+**/*.env
+**/*.mo
+**/credentials.json
+
+/venv/
+/src/logs/

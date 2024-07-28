@@ -1,7 +1,6 @@
 import time
 
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel, Field, EmailStr
 
 from enums.jwt import TokenType, Scopes
 
@@ -15,13 +14,6 @@ class TokenPayload(BaseModel):
 
     iat: float = Field(default_factory=lambda: time.time())
 
-    @property
-    def is_blacklisted(self):
-        return NotImplemented
-        # TODO: Pseudo-code
-        # from JWT.utils import blacklist
-        # return blacklist.in(self.jti)
-
 
 class UserPayload(BaseModel):
     scopes: list[Scopes] = Field(...)
@@ -29,6 +21,7 @@ class UserPayload(BaseModel):
 
 
 class VerifyTokenPayload(TokenPayload):
+    email: EmailStr = Field(...)
     exp: float = Field(default_factory=lambda: time.time() + 604800)
     type: TokenType = Field(default=TokenType.VERIFY)
 

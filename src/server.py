@@ -1,33 +1,26 @@
-import gettext
-
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from loguru import logger
 
-from definitions import LOCALES_DOMAIN, LOCALES_DIR
 from scheduler import scheduler
 from settings import settings
 
 from routes import routers
 import middlewares  # noqa
-from logger import configure_logging
+from signals import WatchSignals
+from utils.logger import configure_logging
+from utils.i18n import configure_gettext
 import mail.signals
 
 
-gettext.install(LOCALES_DOMAIN, LOCALES_DIR)
+configure_gettext()
 configure_logging()
 
-
-def custom_generate_unique_id(route: APIRoute):
-    return (
-        f"{route.tags[0]}-{route.name}" if len(route.tags) else f"unmarked-{route.name}"
-    )
-
+signals_watcher = WatchSignals()
 
 app = FastAPI(
-    generate_unique_id_function=custom_generate_unique_id,
-    on_startup=[scheduler.start, mail.signals.on_startup],
-    on_shutdown=[scheduler.shutdown, mail.signals.on_shutdown],
+    on_startup=[signals_watcher.on_startup, scheduler.start],
+    on_shutdown=[signals_watcher.on_shutdown, scheduler.shutdown],
 )
 
 
@@ -35,5 +28,5 @@ for router in routers:
     app.include_router(router.router)
 
 
-if settings.DOMAIN:
-    logger.info(f"https://{settings.DOMAIN}")
+if settings.project.domain:
+    logger.info(f"https://{settings.project.domain}")

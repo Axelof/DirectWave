@@ -7,6 +7,8 @@ from jwt.exceptions import DecodeError, ExpiredSignatureError
 from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+from utils.files import File
+from definitions import FILES_DIR
 from enums.jwt import TokenType, Scopes
 from utils.encoders import CustomJsonEncoder
 from JWT.models import (
@@ -15,6 +17,53 @@ from JWT.models import (
     RefreshTokenPayload,
     VerifyTokenPayload,
 )
+
+
+class Sign:
+    # Follow the RFC: https://datatracker.ietf.org/doc/html/rfc7519
+    def __init__(self, jwt_bearer: "JWTBearer"):
+        self.jwt = jwt_bearer
+
+    def verify(self, jti: str, email: str):
+        return self.jwt.encode(
+            VerifyTokenPayload(
+                jti=jti, iss=JWTBearer.ISSUER, sub=JWTBearer.SUBJECT
+            ).dict()
+        )
+
+    def access(self, jti: str, _id: str, scopes: list[Scopes]):
+        return self.jwt.encode(
+            AccessTokenPayload(
+                jti=jti,
+                id=_id,
+                scopes=scopes,
+                iss=JWTBearer.ISSUER,
+                sub=JWTBearer.SUBJECT,
+            ).dict()
+        )
+
+    def refresh(self, jti: str, _id: str, scopes: list[Scopes]):
+        return self.jwt.encode(
+            RefreshTokenPayload(
+                jti=jti,
+                id=_id,
+                scopes=scopes,
+                iss=JWTBearer.ISSUER,
+                sub=JWTBearer.SUBJECT,
+            ).dict()
+        )
+
+
+class Blacklist:
+    def __init__(self, jwt_bearer: "JWTBearer"):
+        self.jwt = jwt_bearer
+        self.file = File(FILES_DIR / "jwt" / "blacklist.json")
+
+    def _in(self, jti: str):
+        pass
+
+    def add(self, jti: str):
+        pass
 
 
 class JWTBearer(HTTPBearer):
@@ -39,7 +88,7 @@ class JWTBearer(HTTPBearer):
 
         self.decode = partial(jwt.decode, key=secret, algorithms=[algorithm])
 
-        self.sign = self._Sign(self)
+        self.sign = Sign(self)
 
         super().__init__(auto_error=auto_error)
 
@@ -53,40 +102,6 @@ class JWTBearer(HTTPBearer):
             )
 
         return credentials.credentials
-
-    class _Sign:
-        # Follow the RFC: https://datatracker.ietf.org/doc/html/rfc7519
-        def __init__(self, parent):
-            self._parent = parent
-
-        def verify(self, jti: str):
-            return self._parent.encode(
-                VerifyTokenPayload(
-                    jti=jti, iss=JWTBearer.ISSUER, sub=JWTBearer.SUBJECT
-                ).dict()
-            )
-
-        def access(self, jti: str, _id: str, scopes: list[Scopes]):
-            return self._parent.encode(
-                AccessTokenPayload(
-                    jti=jti,
-                    id=_id,
-                    scopes=scopes,
-                    iss=JWTBearer.ISSUER,
-                    sub=JWTBearer.SUBJECT,
-                ).dict()
-            )
-
-        def refresh(self, jti: str, _id: str, scopes: list[Scopes]):
-            return self._parent.encode(
-                RefreshTokenPayload(
-                    jti=jti,
-                    id=_id,
-                    scopes=scopes,
-                    iss=JWTBearer.ISSUER,
-                    sub=JWTBearer.SUBJECT,
-                ).dict()
-            )
 
     async def verify(self, credentials: HTTPAuthorizationCredentials):
         decrypted_payload = await self.decrypt(credentials.credentials)
